@@ -286,3 +286,9 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+/__vm
+/GDEW027C44 LUT from register
+/GDEW027C44 LUT from OTP
+/CFAP176264A00270.vcxproj.filters
+/CFAP176264A00270.vcxproj
+/CFAP176264A00270.sln
