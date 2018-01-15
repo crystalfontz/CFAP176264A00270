@@ -99,7 +99,7 @@ void writeCMD(uint8_t command)
 }
 
 //this function will take in a byte and send it to the display with the 
-//command bit high for data trasnmission
+//command bit high for data transmission
 void writeData(uint8_t data)
 {
 	ePaper_DC_1;
@@ -132,10 +132,10 @@ void setup(void)
 	ePaper_RST_1;
 	delay(200);
 
-	//---------------------------
-	//more detail on the following commands and additional commands not used here
-	//can be found on the CFAP176264A0-0270 datasheet
-	//---------------------------
+	//-----------------------------------------------------------------------------
+	//more detail on the following commands and additional commands not used here	
+	//can be found on the CFAP176264A0-0270 datasheet on the Crystalfontz website	
+	//-----------------------------------------------------------------------------
 
 	//Power Setting
 	writeCMD(0x01);
@@ -158,7 +158,6 @@ void setup(void)
 	writeData(0x17);
 	
 	//Power optimization
-	
 	writeCMD(0xF8);
 	writeData(0x60);
 	writeData(0xA5);
@@ -193,8 +192,8 @@ void setup(void)
 	writeData(0x87);
 
 	//set LUTs and panel setting
-	setRegisterLUT();
-	//setOTPLUT();
+	//setRegisterLUT();
+	setOTPLUT();
 
 	//Resolution
 	writeCMD(0x61);
@@ -204,26 +203,17 @@ void setup(void)
 	writeData(0x08);	//second half of 2 bytes: 8
 						//	176	 x	264
 
-	
-	//if used more generically, a value "w" and "l" could be set:
-	//writeCMD(0x61);
-	//writeData(w >> 8);	
-	//writeData(w & FF);	
-	//writeData(l >> 8);	
-	//writeData(l & FF);	
-
 	Serial.println("setup complete");
 }
 
 void setRegisterLUT()
 {
-	//set panel setting to call LUTs from the register
-	writeCMD(0x00);
-	writeData(0xEF);
-
 	//set LUTs
 	//The following block allows the LUTs to be changed.
-	//In order for these to take effect, command 0x00 must have bit 5 set to "0"
+	//In order for these LUTs to take effect, command 0x00 must have bit 5 set to "1"
+	//set panel setting to call LUTs from the register
+	writeCMD(0x00);
+	writeData(0xEF); //11101111
 
 	//VCOM_LUT_LUTC
 	writeCMD(0x20);
@@ -261,7 +251,7 @@ void setOTPLUT()
 {
 	//set panel setting to call LUTs from OTP
 	writeCMD(0x00);
-	writeData(0xCF);
+	writeData(0xCF); //11001111
 }
 
 
@@ -269,7 +259,28 @@ void setOTPLUT()
 #define SHUTDOWN_BETWEEN_UPDATES (0)
 void loop()
 {
-	//
+	//Display the splash screen
+	writeCMD(0x10);
+	for (int i = 0; i < 5808; i++)
+	{
+		writeData(pgm_read_byte(&Splash_Mono_1BPP[i]));
+	}
+
+	//start data transmission 2: red data
+	writeCMD(0x13);
+	for (int i = 0; i < 5808; i++)
+	{
+		writeData(pgm_read_byte(&Splash_Red_1BPP[i]));
+	}
+
+	//refresh the display
+	writeCMD(0x12);
+	while (0 == digitalRead(EPD_READY));
+	delay(5000);
+
+
+	//The remaining block of code is to demonstrate partial updates
+	//Set the LUT from the OTP since we're doing partial refreshes
 	setOTPLUT();
 
 	//start data transmission 1: B&W data
@@ -293,7 +304,7 @@ void loop()
 
 	//currently we're setting the register LUTs for partial refresh due to an
 	//issue where the OTP LUTs cause black lines to appear across the screen
-	//when performing a partial update
+	//when performing a partial update. 
 	setRegisterLUT();
 	
 	//partial updating the screen: Black
@@ -309,8 +320,7 @@ void loop()
 
 	for (int h = 0; h < 60; h++)
 	{
-		writeData(0x00);
-		for (int i = 0; i < 7; i++) 
+		for (int i = 0; i < 8; i++) 
 		{
 			writeData(0x00);
 		}
@@ -346,8 +356,7 @@ void loop()
 
 	for (int h = 0; h < 60; h++)
 	{
-		writeData(0x00);
-		for (int i = 0; i < 7; i++)
+		for (int i = 0; i < 8; i++)
 		{
 			writeData(0x00);
 		}
@@ -365,8 +374,7 @@ void loop()
 
 	for (int h = 0; h < 60; h++)
 	{
-		writeData(0x1F);
-		for (int i = 0; i < 7; i++)
+		for (int i = 0; i < 8; i++)
 		{
 			writeData(0xFF);
 		}
